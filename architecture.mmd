@@ -1,0 +1,33 @@
+graph TD
+    subgraph External
+        CS[Certstream WebSocket]
+    end
+
+    subgraph Ingestor_Module
+        P[Java Producer]
+    end
+
+    subgraph Kafka_Cluster
+        T1[(raw-domains topic)]
+        T2[(detected-threats topic)]
+    end
+
+    subgraph Processor_Module
+        KSP[Kafka Streams Processor]
+        LV[Levenshtein Algorithm]
+    end
+
+    subgraph Alerter_Module
+        C[Java Consumer]
+        DB[(PostgreSQL)]
+        SL[Slack Webhook]
+    end
+
+    CS -->|Stream JSON| P
+    P -->|Serialize| T1
+    T1 -->|Subscribe| KSP
+    KSP -->|Analyze| LV
+    LV -->|Match Found| T2
+    T2 -->|Consume| C
+    C -->|Store| DB
+    C -->|Notify| SL

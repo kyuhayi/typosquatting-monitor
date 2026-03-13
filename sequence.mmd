@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant CS as Certstream (External)
+    participant IG as Ingestor (Java)
+    participant KF as Kafka Broker
+    participant SP as Streams Processor (Java)
+    participant AL as Alerter (Java)
+
+    CS->>IG: New SSL Certificate Event (JSON)
+    IG->>KF: Produce DomainEvent to 'raw-domains'
+    KF->>SP: Consume Record
+    Note over SP: Calculate Levenshtein Distance<br/>Check Similarity Threshold
+    alt is Threat
+        SP->>KF: Produce ThreatEvent to 'detected-threats'
+        KF->>AL: Consume Threat
+        AL->>AL: Save to PostgreSQL
+        AL->>AL: Trigger Slack Notification
+    else is Safe
+        Note over SP: Drop Event
+    end
